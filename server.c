@@ -1,6 +1,8 @@
 #include <stdio.h>      
 #include <sys/types.h>
-#include <sys/socket.h>   
+#include <sys/socket.h>  
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,6 +55,7 @@ int main(int argc, char *argv[])
     if (returnStatus == 0) 
     {
 	    fprintf(stderr, "Bind completed!\n");
+        fprintf(stderr, "Currently listening on %s:%d", inet_ntoa(simpleServer.sin_addr), simplePort);
     }
     else 
     {
