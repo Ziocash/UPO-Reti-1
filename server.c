@@ -8,6 +8,9 @@
 #include <string.h>
 #include <unistd.h> 
 
+const char WELCOME[] = "OK START Benvenuto\n";
+const char *COMMANDS[] = {"TEXT", "HIST", "QUIT", "EXIT"};
+
 int main(int argc, char *argv[])
 {
     int simpleSocket = 0;
@@ -59,7 +62,7 @@ int main(int argc, char *argv[])
     }
     else 
     {
-        fprintf(stderr, "Could not bind to address!\n");
+        fprintf(stderr, "Could not bind to address! Status: %d\n", returnStatus);
         close(simpleSocket);
         exit(1);
     }
@@ -83,9 +86,7 @@ int main(int argc, char *argv[])
         int clientNameLength = sizeof(clientName);
 
         /* wait here */
-        
-
-        simpleChildSocket = accept(simpleSocket,(struct sockaddr *)&clientName, &clientNameLength);
+        simpleChildSocket = accept(simpleSocket,(struct sockaddr*)&clientName, &clientNameLength);
 
         if (simpleChildSocket == -1) 
         {
@@ -93,11 +94,14 @@ int main(int argc, char *argv[])
             close(simpleSocket);
             exit(1);
         }
-
-        /* handle the new connection request  */
-        /* write out our message to the client */
-        write(simpleChildSocket, "Address\n", strlen("Address\n"));
-            close(simpleChildSocket);
+        
+        char buffer[256] = "";
+        write(simpleChildSocket, WELCOME, strlen(WELCOME));
+        returnStatus = read(simpleSocket, buffer, sizeof(buffer));
+            
+        if(strcmp(buffer, COMMANDS[2]) == 0 || strcmp(buffer, COMMANDS[3]) == 0)
+        close(simpleChildSocket);
+        
 
     }
 
@@ -105,7 +109,11 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void compute_command(char *command[])
+
+
+char *text_analysis(char *text[])
 {
+    char *result[1024];
     
+    return *result;
 }
