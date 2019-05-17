@@ -60,22 +60,30 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    char  message[]= "";
     int flag = 1;
-    
-    while(flag)
+    /* get the message from the server   */
+	returnStatus = read(simpleSocket, buffer, sizeof(buffer));
+	printf("%s", buffer);
+
+	
+do
     {
-        /* get the message from the server   */
-        returnStatus = read(simpleSocket, buffer, sizeof(buffer));
-        printf("%s", buffer);
+		char  message[256] = "";
         scanf("%s", message); 
+	while(returnStatus == -1)
+	/* get the message from the server   */
+	returnStatus = read(simpleSocket, buffer, sizeof(buffer));
+	printf("%s", buffer);
+
         
-        command_validation(message);
-        
-        if(strstr(message, "EXIT") != NULL || strstr(message, "QUIT") != NULL)
+        //command_validation(message);
+	write(simpleSocket, message, strlen(message));  
+	    
+
+        if(strstr(message, "QUIT") != NULL)
             flag = 0;
         
-    }
+	}while (flag);
 
     close(simpleSocket);
     return 0;

@@ -9,6 +9,7 @@
 #include <unistd.h> 
 
 const char WELCOME[] = "OK START Benvenuto\n";
+const char ERROR[] = "ERR ";
 const char *COMMANDS[] = {"TEXT", "HIST", "QUIT", "EXIT"};
 
 int main(int argc, char *argv[])
@@ -88,7 +89,7 @@ int main(int argc, char *argv[])
         /* wait here */
         simpleChildSocket = accept(simpleSocket,(struct sockaddr*)&clientName, &clientNameLength);
 
-        if (simpleChildSocket == -1) 
+        if (simpleChildSocket == -1)
         {
             fprintf(stderr, "Cannot accept connections!\n");
             close(simpleSocket);
@@ -97,10 +98,16 @@ int main(int argc, char *argv[])
         
         char buffer[256] = "";
         write(simpleChildSocket, WELCOME, strlen(WELCOME));
-        returnStatus = read(simpleSocket, buffer, sizeof(buffer));
+	while(returnStatus == -1)
+	{
+        	returnStatus = read(simpleSocket, buffer, sizeof(buffer));
+	}
             
         if(strcmp(buffer, COMMANDS[2]) == 0 || strcmp(buffer, COMMANDS[3]) == 0)
-        close(simpleChildSocket);
+	        close(simpleChildSocket);
+
+	else
+		write(simpleChildSocket, ERROR, strlen(ERROR));
         
 
     }
