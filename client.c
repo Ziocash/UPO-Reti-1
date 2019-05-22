@@ -7,7 +7,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) 
+{
 
     int simpleSocket = 0;
     int simplePort = 0;
@@ -21,7 +22,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    /* create a streaming socket      */
+    /*	create a streaming socket	*/
     simpleSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
     if (simpleSocket == -1) 
@@ -66,18 +67,18 @@ int main(int argc, char *argv[]) {
 	printf("%s", buffer);
 
 	
-do
+	do
     {
 		char  message[256] = "";
         scanf("%s", message); 
-	while(returnStatus == -1)
-	/* get the message from the server   */
-	returnStatus = read(simpleSocket, buffer, sizeof(buffer));
-	printf("%s", buffer);
+		while(returnStatus == -1)
+		/* get the message from the server   */
+		returnStatus = read(simpleSocket, buffer, sizeof(buffer));
+		printf("%s", buffer);
 
         
         //command_validation(message);
-	write(simpleSocket, message, strlen(message));  
+		write(simpleSocket, message, strlen(message));  
 	    
 
         if(strstr(message, "QUIT") != NULL)

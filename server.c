@@ -10,7 +10,7 @@
 
 const char WELCOME[] = "OK START Benvenuto\n";
 const char ERROR[] = "ERR ";
-const char *COMMANDS[] = {"TEXT", "HIST", "QUIT", "EXIT"};
+const char *COMMANDS[] = {"START", "TEXT", "HIST", "QUIT", "EXIT"};
 
 int main(int argc, char *argv[])
 {
@@ -79,7 +79,6 @@ int main(int argc, char *argv[])
     }
 
     while (1)
-
     {
 
         struct sockaddr_in clientName = { 0 };
@@ -95,19 +94,20 @@ int main(int argc, char *argv[])
             close(simpleSocket);
             exit(1);
         }
+		else
+			write(simpleChildSocket, WELCOME, strlen(WELCOME));        
         
-        char buffer[256] = "";
-        write(simpleChildSocket, WELCOME, strlen(WELCOME));
-	while(returnStatus == -1)
-	{
+		char buffer[256] = "";	
+		while(returnStatus == -1)
+		{
         	returnStatus = read(simpleSocket, buffer, sizeof(buffer));
-	}
+		}
             
-        if(strcmp(buffer, COMMANDS[2]) == 0 || strcmp(buffer, COMMANDS[3]) == 0)
+        if(strcmp(buffer, COMMANDS[3]) == 0 || strcmp(buffer, COMMANDS[4]) == 0)
 	        close(simpleChildSocket);
 
-	else
-		write(simpleChildSocket, ERROR, strlen(ERROR));
+		else 
+			write(simpleChildSocket, ERROR, strlen(ERROR));
         
 
     }
