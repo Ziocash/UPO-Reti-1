@@ -6,11 +6,45 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h> 
+#include <unistd.h>
+
+#define EMPTY_SOCKET (-1)
 
 const char WELCOME[] = "OK START Benvenuto\n";
 const char ERROR[] = "ERR ";
 const char *COMMANDS[] = {"START", "TEXT", "HIST", "QUIT", "EXIT"};
+unsigned char TEXT[] = "string";
+
+
+int text_assert(unsigned char *src)
+{
+    if(memcpy(TEXT, src, sizeof(src)) != NULL)
+        return 1;
+    else
+        return 0;
+        
+}
+
+void * histogram()
+{
+    unsigned int *count[52]; 
+    if(TEXT == NULL)
+        abort();
+    else
+    {
+        int i = 0;
+        while (TEXT[i] != '\0') 
+        {
+            if (TEXT[i] >= 'a' && TEXT[i] <= 'z' || TEXT[i] >= 'A' && TEXT[i] <= 'Z') 
+            {
+                int x = TEXT[i] - 'a';
+                count[x]++;
+            }
+            i++;
+        }
+    }
+    return count;
+} 
 
 int main(int argc, char *argv[])
 {
@@ -37,11 +71,6 @@ int main(int argc, char *argv[])
 	    fprintf(stderr, "Socket created!\n");
     }
     
-    
-    
-    
-    
-    
     /* retrieve the port number for listening */
     simplePort = atoi(argv[1]);
     //fprintf(stderr, &simplePort);
@@ -59,7 +88,7 @@ int main(int argc, char *argv[])
     if (returnStatus == 0) 
     {
 	    fprintf(stderr, "Bind completed!\n");
-        fprintf(stderr, "Currently listening on %s:%d", inet_ntoa(simpleServer.sin_addr), simplePort);
+        fprintf(stderr, "Currently listening on %s:%d\n", inet_ntoa(simpleServer.sin_addr), simplePort);
     }
     else 
     {
@@ -84,9 +113,10 @@ int main(int argc, char *argv[])
         struct sockaddr_in clientName = { 0 };
         int simpleChildSocket = 0;
         int clientNameLength = sizeof(clientName);
+        char buffer[256] = "";
 
-        /* wait here */
-        simpleChildSocket = accept(simpleSocket,(struct sockaddr*)&clientName, &clientNameLength);
+        //wait here
+        simpleChildSocket = accept(simpleSocket, (struct sockaddr*)&clientName, &clientNameLength);
 
         if (simpleChildSocket == -1)
         {
@@ -95,32 +125,36 @@ int main(int argc, char *argv[])
             exit(1);
         }
 		else
-			write(simpleChildSocket, WELCOME, strlen(WELCOME));        
-        
-		char buffer[256] = "";	
-		while(returnStatus == -1)
-		{
-        	returnStatus = read(simpleSocket, buffer, sizeof(buffer));
-		}
-            
-        if(strcmp(buffer, COMMANDS[3]) == 0 || strcmp(buffer, COMMANDS[4]) == 0)
-	        close(simpleChildSocket);
-
-		else 
-			write(simpleChildSocket, ERROR, strlen(ERROR));
-        
-
+        {
+            fprintf(stdout, "\nClient connected\n");
+            write(simpleChildSocket, WELCOME, strlen(WELCOME));
+            while(simpleChildSocket != EMPTY_SOCKET)
+            {
+                while ((returnStatus = read(simpleSocket, buffer, sizeof(buffer))) >= 0)
+                {
+                    fprintf(stderr, "Internal error %s\n", buffer);
+                }
+                
+                if(strstr(buffer, COMMANDS[1]) != NULL)
+                    text_assert(buffer);
+                else if(strstr(buffer, COMMANDS[2]) != NULL)
+                    histogram();
+                else if(strstr(buffer, COMMANDS[3]) != NULL)
+                {
+                    write(simpleChildSocket, "Closing connection\n", sizeof("Closing connection\n"));
+                    close(simpleChildSocket);
+                }
+                else if(buffer != NULL)
+                {
+                    write(simpleChildSocket, ERROR, sizeof(ERROR));
+                    
+                }
+                bzero(buffer, sizeof(buffer));
+            }
+            fprintf(stdout, "\nClient disconnected\n");
+        }
     }
 
     close(simpleSocket);
     return 0;
-}
-
-
-
-char *text_analysis(char *text[])
-{
-    char *result[1024];
-    
-    return *result;
 }
