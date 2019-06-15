@@ -6,7 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#define VERSION "0.4.12"
+#define VERSION "0.4.125"
 
 const char *COMMANDS[] = {"START", "TEXT", "HIST", "QUIT", "EXIT"};
 
@@ -21,8 +21,21 @@ void print_menu()
     fprintf(stdout, "Eseguire le operazioni in ordine: non è possibile analizzare un testo non fornito!\n");
     fprintf(stdout, "1- Inviare il testo con la relativa lunghezza (es.: \"ciao come stai\" 14)\n");
     fprintf(stdout, "2- Visualizzare la frequenza dei caratteri contenuti nella stringa\n");
-    fprintf(stdout, "3- ");
-    fprintf(stdout, "4- ");
+    fprintf(stdout, "3- \n");
+    fprintf(stdout, "4- \n");
+}
+
+void elapse_string(char str[])
+{
+    char delim[] = " ";
+    char *ptr = strtok(str, delim);
+
+	while(ptr != NULL)
+	{
+        if(strstr(ptr, "OK") != NULL || strstr(ptr, "ERR") != NULL)
+		    fprintf(stdout, "'%s'\n", ptr);
+		    ptr = strtok(NULL, delim);
+	}
 }
 
 int main(int argc, char *argv[]) 
@@ -31,7 +44,7 @@ int main(int argc, char *argv[])
     int simpleSocket = 0;
     int simplePort = 0;
     int returnStatus = 0;
-    char buffer[256] = "";
+    char buffer[512] = "";
     struct sockaddr_in simpleServer;
 
     print_title();
@@ -71,8 +84,12 @@ int main(int argc, char *argv[])
 
     if (returnStatus == 0) 
     {
-	    fprintf(stdout, "Connect successful!\n");
-        //write(simpleSocket, COMMANDS[0], sizeof(COMMANDS[0]));                
+	    fprintf(stdout, "Connect successful! Server at %s:%d\n", inet_ntoa(simpleServer.sin_addr), simplePort);
+        returnStatus = read(simpleSocket, buffer, sizeof(buffer));
+    	print_menu();
+        elapse_string(buffer);
+        //fprintf(stdout, "%s\n", buffer);
+        bzero(buffer, sizeof(buffer));
     }
     else 
     {
@@ -81,30 +98,33 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    bzero(buffer, sizeof(buffer));
-
     int flag = 1;	
 	do
-    {       
-        //get the message from the server   
-	    returnStatus = read(simpleSocket, buffer, sizeof(buffer));
-    	printf("%s", buffer);
-        bzero(buffer, sizeof(buffer));
-
-		char  message[256] = "";
+    {
+		char  message[512] = "";
         fprintf(stdout, "Command: ");
-        scanf(" %s", message); 
-		write(simpleSocket, message, strlen(message));
-        read(simpleSocket, buffer, sizeof(buffer));
-		fprintf(stdout, "%s", buffer);
+        fscanf(stdin, " %[^\n]s\n", message);
+        message[strlen(message)] = '\n';
+
+        if(strstr(message, "QUIT") != NULL)
+        {
+            flag = 0;
+            write(simpleSocket, message, strlen(message));
+        }
+        else
+		{
+            write(simpleSocket, message, strlen(message));
+        }
+        bzero(buffer, sizeof(buffer));
+        bzero(message, sizeof(message));
+        //while(returnStatus > 0)
+            returnStatus = read(simpleSocket, buffer, sizeof(buffer));
+    	fprintf(stdout, "%s\n", buffer);
 
         
         //command_validation(message);
 
-        if(strstr(message, "QUIT") != NULL)
-            flag = 0;
-
-        bzero(buffer, sizeof(buffer));
+       
 
 	}while (flag);
 

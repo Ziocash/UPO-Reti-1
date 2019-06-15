@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         struct sockaddr_in clientName = { 0 };
         int simpleChildSocket = 0;
         int clientNameLength = sizeof(clientName);
-        char buffer[256] = "";
+        char buffer[512] = "";
 
         //wait here
         simpleChildSocket = accept(simpleSocket, (struct sockaddr*)&clientName, &clientNameLength);
@@ -126,8 +126,9 @@ int main(int argc, char *argv[])
         }
 		else
         {
-            fprintf(stdout, "\nClient connected\n");
+            fprintf(stdout, "\nClient connected with address %s\n", inet_ntoa(clientName.sin_addr));
             write(simpleChildSocket, WELCOME, strlen(WELCOME));
+            bzero(buffer, sizeof(buffer));
             while(simpleChildSocket != EMPTY_SOCKET)
             {
                 while ((returnStatus = read(simpleSocket, buffer, sizeof(buffer))) >= 0)
@@ -147,7 +148,6 @@ int main(int argc, char *argv[])
                 else if(buffer != NULL)
                 {
                     write(simpleChildSocket, ERROR, sizeof(ERROR));
-                    
                 }
                 bzero(buffer, sizeof(buffer));
             }
