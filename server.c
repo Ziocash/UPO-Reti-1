@@ -13,7 +13,7 @@
 const char WELCOME[] = "OK START Benvenuto\n";
 const char ERROR[] = "ERR ";
 const char *COMMANDS[] = {"START", "TEXT", "HIST", "QUIT", "EXIT"};
-unsigned char TEXT[] = "string";
+unsigned char TEXT[];
 
 
 int text_assert(unsigned char *src)
