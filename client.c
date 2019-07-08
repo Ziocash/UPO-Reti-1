@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 
 #define EXECUTABLE_NAME "TEXT Analyzer"
-#define VERSION "0.4.5100.43"
+#define VERSION "0.5.510.24003"
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -36,26 +36,33 @@ void print_menu()
 
 void elapse_string(char *str)
 {
+    /*
+        
+     */
+    //-----------------------------------------
     char delim[] = "|";
     int length = strlen(str);
     char response[length];
+    int flag = 0; 
+
     bzero(response, sizeof(response));
     int i = 0, j = 0;
     while(i < length)
     {
-        if(isalnum(str[i]) || ispunct(str[i]))
+        if(isalnum(str[i]))
         {
             response[j] = str[i];
             j++;
         }
-        else if(str[i] == 32)
+        else
         {
             response[j] = '|';
             j++;
         }
         i++;
     }
-    response[j] = '\0';
+    //------------------------------------------------------
+
 
     char *ptr = strtok(response, delim);
 
@@ -64,34 +71,37 @@ void elapse_string(char *str)
         if(strcmp(ptr, "OK") == 0)
         {
             ptr = strtok(NULL, delim); 
-            if(strcmp(ptr, COMMANDS[0]) == 0)
-            {
-                ptr = strtok(NULL, delim);
-                fprintf(stderr, ANSI_COLOR_YELLOW "%s" ANSI_COLOR_RESET, ptr);
-            }
-            else if(strcmp(ptr, COMMANDS[1]) == 0)
+            if(strcmp(ptr, COMMANDS[1]) == 0)
             {
                 ptr = strtok(NULL, delim); 
-                fprintf(stderr, "Contatore (server): %s\n", ptr);
+                fprintf(stderr, ANSI_COLOR_GREEN "Contatore (server): %s\n" ANSI_COLOR_RESET, ptr);
                 break;
             }
             else if(strcmp(ptr, COMMANDS[2]) == 0 || strcmp(ptr, COMMANDS[3]) == 0)
             {
-                char string[512];
-                int len = 0;
-                memset(string, 0, sizeof(string));
+                char string[1024];
+                if(strcmp(ptr, COMMANDS[3]) == 0)
+                    flag = 1;
+                bzero(string, sizeof(string));
+                strcat(string, "\nCalcolo istogramma in corso...\n");
                 while(ptr != NULL)
                 {
-                    if(strstr(ptr, "OK") == NULL && strstr(ptr, COMMANDS[2]) == NULL && strstr(ptr, "END") == NULL)
+                    if(strstr(ptr, "OK") == NULL && strstr(ptr, COMMANDS[2]) == NULL && strstr(ptr, "END") == NULL && strstr(ptr, COMMANDS[3]) == NULL)
                     {                        
                         strcat(string, ptr);
-                        strcat(string, " ");
+                        if(isalpha(ptr[0]))
+                            strcat(string, "-");
+                        else
+                            strcat(string, " ");
                         ptr = strtok(NULL, delim);
                     }
                     else if(strstr(ptr, "END") != NULL)
                     {
-                        strcat(string, "Istogramma terminato\n");
-                        break;
+                        strcat(string, "Istogramma terminato\n");                        
+                        if(flag)
+                            break;
+                        else
+                            ptr = strtok(NULL, delim);
                     }
                     else 
                     {
@@ -105,28 +115,36 @@ void elapse_string(char *str)
             }
             else 
             {
+                char string[512];
+                memset(string, 0, sizeof(string));
                 ptr = strtok(NULL, delim);
-                fprintf(stderr, ANSI_COLOR_YELLOW "%s" ANSI_COLOR_RESET, ptr);
+                while(ptr != NULL)
+                {
+                    strcat(string, ptr);
+                    strcat(string, " ");
+                    ptr = strtok(NULL, delim);
+                }
+                fprintf(stderr, ANSI_COLOR_YELLOW "%s" ANSI_COLOR_RESET, string);
             }
-
-            // while(ptr != NULL)
-            // {
-            //     fprintf(stderr, "%s ", ptr);
-            //     ptr = strtok(NULL, delim);
-            // }
             fprintf(stderr, "\n");
             break;
         }
         else if(strcmp(ptr, "ERR") == 0)
         {
+            char string[1024];
+            bzero(string, sizeof(string));
             ptr = strtok(NULL, delim);
             ptr = strtok(NULL, delim);
             while(ptr != NULL)
             {
-                fprintf(stderr, "%s ", ptr);
+                if(isalpha(ptr[0]) && !ispunct(ptr[0]))
+                {
+                    strcat(string, ptr);
+                    strcat(string, " ");
+                }
                 ptr = strtok(NULL, delim);
             }
-            fprintf(stderr, "\n");
+            fprintf(stderr, ANSI_COLOR_RED "%s\n" ANSI_COLOR_RESET, string);
         }
     }
     bzero(str, sizeof(&str));
@@ -137,7 +155,7 @@ int count_string(char str[])
 {
     int counter = 0;
     for(int i = 0; i < strlen(str); i++)
-        if(isdigit(str[i]) || isalpha(str[i]))
+        if(isalnum(str[i]) || ispunct(str[i]))
             counter++;
     return counter;
 }
@@ -182,7 +200,7 @@ int main(int argc, char *argv[])
     bzero(&simpleServer, sizeof(simpleServer));
     simpleServer.sin_family = AF_INET;
     //inet_addr(argv[2], &simpleServer.sin_addr.s_addr);
-    simpleServer.sin_addr.s_addr=inet_addr(argv[1]);
+    simpleServer.sin_addr.s_addr = inet_addr(argv[1]);
     simpleServer.sin_port = htons(simplePort);
 
     //connect to the address and port with our socket
@@ -208,7 +226,7 @@ int main(int argc, char *argv[])
     int flag = 1;	
 	do
     {
-		char text[512] = "";
+		char text[4096] = "";
         char message[512] = "";
         int choice = 0;
         do
@@ -237,63 +255,57 @@ int main(int argc, char *argv[])
         text[strlen(text)] = '\n';
         fflush(stderr);
 
+        //Command identification
         switch (choice)
         {
-        case 1:
-            strcat(message, COMMANDS[1]);
-            strcat(message, " ");
-            strcat(message, text);
-            write(simpleSocket, message, strlen(message));
-            break;
-
-        case 2:
-            strcat(message, COMMANDS[2]);
-            strcat(message, "\n");
-            write(simpleSocket, message, strlen(message));
-            break;
-
-        case 3:
-            strcat(message, COMMANDS[3]);
-            strcat(message, "\n");
-            write(simpleSocket, message, strlen(message));
-            break;
-
-        case 4:
-            strcat(message, COMMANDS[4]);
-            strcat(message, "\n");
-            write(simpleSocket, message, strlen(message));
-            flag = 0;
-            break;
-        case 5:
-            system("clear");
-            print_title();
-            print_menu();
-            break;
-
-        default:
-            break;
+            //TEXT
+            case 1:
+                strcat(message, COMMANDS[1]);
+                strcat(message, " ");
+                strcat(message, text);
+                write(simpleSocket, message, strlen(message));
+                break;
+            //HIST
+            case 2:
+                strcat(message, COMMANDS[2]);
+                strcat(message, "\n");
+                write(simpleSocket, message, strlen(message));
+                break;
+            //EXIT
+            case 3:
+                strcat(message, COMMANDS[3]);
+                strcat(message, "\n");
+                write(simpleSocket, message, strlen(message));
+                flag = 0;
+                break;
+            //QUIT
+            case 4:
+                strcat(message, COMMANDS[4]);
+                strcat(message, "\n");
+                write(simpleSocket, message, strlen(message));
+                flag = 0;
+                break;
+            //Console clear
+            case 5:
+                system("clear");
+                print_title();
+                print_menu();
+                break;
+            //No selection
+            default:
+                choice = 0;
+                break;
         }
-
-        // if(strstr(message, "QUIT") != NULL)
-        // {
-        //     flag = 0;
-        //     write(simpleSocket, message, strlen(message));
-        // }
-        // else
-		// {
-        //     write(simpleSocket, message, strlen(message));
-        // }
+        //Initializations
         bzero(buffer, sizeof(buffer));
         bzero(message, sizeof(message));
-        if(choice != 5)
+        //Socket reading if choice is not "cls" 
+        if(choice > 0 && choice < 5)
         {
-            // do
-            // {
-                returnStatus = read(simpleSocket, buffer, 512);
-                elapse_string(buffer); 
-                fflush(stderr);
-            // } while ();           
-                       
+            usleep(150);
+            returnStatus = read(simpleSocket, buffer, 512);
+            elapse_string(buffer); 
+            fflush(stderr);                           
         }
     	
 	}

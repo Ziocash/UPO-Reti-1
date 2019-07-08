@@ -9,19 +9,27 @@
 #include <unistd.h>
 
 #define EMPTY_SOCKET (-1)
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 
 const char WELCOME[] = "OK START Benvenuto\n";
 const char ERROR[] = "ERR ";
 const char *COMMANDS[] = {"START", "TEXT", "HIST", "QUIT", "EXIT"};
-unsigned char TEXT[];
+unsigned char TEXT[4096];
 
 
-int text_assert(unsigned char *src)
+void text_assert(unsigned char *src)
 {
-    if(memcpy(TEXT, src, sizeof(src)) != NULL)
-        return 1;
-    else
-        return 0;
+    int length = strlen(src);
+    int index = 0;
+    for(int i = 0; i < length; i++)
+        if(i > 3 && (isalpha(src[i]) || ispunct(src[i])))
+        {
+            if(isspace(src[i]))
+            TEXT[index++] = src[i];
+        }    
         
 }
 
@@ -55,7 +63,7 @@ int main(int argc, char *argv[])
 
     if (argc != 2) 
     {
-        fprintf(stderr, "Usage: %s <port>\n", argv[0]);
+        fprintf(stderr, ANSI_COLOR_RED "Usage: %s <port>\n" ANSI_COLOR_RESET, argv[0]);
         exit(1);
     }
 
@@ -63,17 +71,16 @@ int main(int argc, char *argv[])
 
     if (simpleSocket == -1) 
     {
-        fprintf(stderr, "Could not create a socket!\n");
+        fprintf(stderr, ANSI_COLOR_RED "Could not create a socket!\n" ANSI_COLOR_RESET);
         exit(1);
     }
     else 
     {
-	    fprintf(stderr, "Socket created!\n");
+	    fprintf(stderr, ANSI_COLOR_GREEN "Socket created!\n" ANSI_COLOR_RESET);
     }
     
     /* retrieve the port number for listening */
     simplePort = atoi(argv[1]);
-    //fprintf(stderr, &simplePort);
 
     /* setup the address structure */
     /* use INADDR_ANY to bind to all local addresses  */
@@ -87,12 +94,12 @@ int main(int argc, char *argv[])
 
     if (returnStatus == 0) 
     {
-	    fprintf(stderr, "Bind completed!\n");
-        fprintf(stderr, "Currently listening on %s:%d\n", inet_ntoa(simpleServer.sin_addr), simplePort);
+	    fprintf(stderr, ANSI_COLOR_GREEN "Bind completed!\n");
+        fprintf(stderr, "Currently listening on %s:%d\n" ANSI_COLOR_RESET, inet_ntoa(simpleServer.sin_addr), simplePort);
     }
     else 
     {
-        fprintf(stderr, "Could not bind to address! Status: %d\n", returnStatus);
+        fprintf(stderr, ANSI_COLOR_RED "Could not bind to address! Status: %d\n" ANSI_COLOR_RESET, returnStatus);
         close(simpleSocket);
         exit(1);
     }
@@ -102,10 +109,12 @@ int main(int argc, char *argv[])
 
     if (returnStatus == -1)
     {
-        fprintf(stderr, "Cannot listen on socket!\n");
+        fprintf(stderr,  ANSI_COLOR_RED "Cannot listen on socket!\n" ANSI_COLOR_RESET);
         close(simpleSocket);
         exit(1);
     }
+
+    //Server cycle
 
     while (1)
     {
@@ -114,43 +123,43 @@ int main(int argc, char *argv[])
         int simpleChildSocket = 0;
         int clientNameLength = sizeof(clientName);
         char buffer[512] = "";
+        bzero(buffer, sizeof(buffer));
 
         //wait here
         simpleChildSocket = accept(simpleSocket, (struct sockaddr*)&clientName, &clientNameLength);
 
-        if (simpleChildSocket == -1)
+        if (simpleChildSocket == EMPTY_SOCKET)
         {
-            fprintf(stderr, "Cannot accept connections!\n");
+            fprintf(stderr, ANSI_COLOR_RED "Cannot accept connections!\n" ANSI_COLOR_RESET);
             close(simpleSocket);
             exit(1);
         }
 		else
         {
-            fprintf(stdout, "\nClient connected with address %s\n", inet_ntoa(clientName.sin_addr));
+            fprintf(stdout, ANSI_COLOR_GREEN "\nClient connected with address %s\n" ANSI_COLOR_RESET, inet_ntoa(clientName.sin_addr));
             write(simpleChildSocket, WELCOME, strlen(WELCOME));
-            bzero(buffer, sizeof(buffer));
-            while(simpleChildSocket != EMPTY_SOCKET)
+            
+            returnStatus = read(simpleChildSocket, buffer, sizeof(buffer));
+            if(strstr(buffer, COMMANDS[1]) != NULL)
+                text_assert(buffer);
+            else if(strstr(buffer, COMMANDS[2]) != NULL)
+                histogram();
+            else if(strstr(buffer, COMMANDS[4]) != NULL)
             {
-                while ((returnStatus = read(simpleSocket, buffer, sizeof(buffer))) >= 0)
-                {
-                    fprintf(stderr, "Internal error %s\n", buffer);
-                }
-                
-                if(strstr(buffer, COMMANDS[1]) != NULL)
-                    text_assert(buffer);
-                else if(strstr(buffer, COMMANDS[2]) != NULL)
-                    histogram();
-                else if(strstr(buffer, COMMANDS[3]) != NULL)
-                {
-                    write(simpleChildSocket, "Closing connection\n", sizeof("Closing connection\n"));
-                    close(simpleChildSocket);
-                }
-                else if(buffer != NULL)
-                {
-                    write(simpleChildSocket, ERROR, sizeof(ERROR));
-                }
-                bzero(buffer, sizeof(buffer));
+                histogram();
+                close(simpleChildSocket);
             }
+            else if(strstr(buffer, COMMANDS[3]) != NULL)
+            {
+                write(simpleChildSocket, "Closing connection\n", sizeof("Closing connection\n"));
+                close(simpleChildSocket);
+            }
+            else if(buffer != NULL)
+            {
+                write(simpleChildSocket, ERROR, sizeof(ERROR));
+            }
+            bzero(buffer, sizeof(buffer));
+        
             fprintf(stdout, "\nClient disconnected\n");
         }
     }
