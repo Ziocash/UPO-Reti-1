@@ -25,11 +25,8 @@ void text_assert(unsigned char *src)
     int length = strlen(src);
     int index = 0;
     for(int i = 0; i < length; i++)
-        if(i > 3 && (isalpha(src[i]) || ispunct(src[i])))
-        {
-            if(isspace(src[i]))
+        if(i > 3 && (isalpha(src[i]) || ispunct(src[i]) || src[i] == ' '))
             TEXT[index++] = src[i];
-        }    
         
 }
 
