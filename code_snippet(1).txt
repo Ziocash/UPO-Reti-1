@@ -1,0 +1,33 @@
+char string[1024];
+            if(strcmp(ptr, COMMANDS[3]) == 0)
+                flag = 1;
+            bzero(string, sizeof(string));
+            strcat(string, "\nCalcolo istogramma in corso...\n");
+            while(ptr != NULL)
+            {
+                if(strstr(ptr, "OK") == NULL && strstr(ptr, COMMANDS[2]) == NULL && strstr(ptr, "END") == NULL && strstr(ptr, COMMANDS[3]) == NULL)
+                {                        
+                    strcat(string, ptr);
+                    if(isalpha(ptr[0]))
+                        strcat(string, "-");
+                    else
+                        strcat(string, " ");
+                    ptr = strtok(NULL, delim);
+                }
+                else if(strstr(ptr, "END") != NULL)
+                {
+                    strcat(string, "Istogramma terminato\n");                        
+                    if(flag)
+                        break;
+                    else
+                        ptr = strtok(NULL, delim);
+                }
+                else 
+                {
+                    ptr = strtok(NULL, delim);
+                    strcat(string, "\n");
+                }
+            }
+
+            fprintf(stderr, ANSI_COLOR_YELLOW "%s" ANSI_COLOR_RESET, string);
+            fflush(stderr);

@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 
 #define EXECUTABLE_NAME "TEXT Analyzer"
-#define VERSION "0.5.510.24003"
+#define VERSION "0.7.10.3"
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -17,16 +17,18 @@
 
 const char *COMMANDS[] = { "START", "TEXT", "HIST", "EXIT", "QUIT" };
 
+//stampa titolo
 void print_title()
 {
     fprintf(stderr, "%s - %s\n", EXECUTABLE_NAME, VERSION);
 }
 
+//stampa menu
 void print_menu()
 {
     fprintf(stderr, "Scegliere un'operazione da fare\n");
     fprintf(stderr, "Eseguire le operazioni in ordine: non è possibile analizzare un testo non fornito!\n");
-    fprintf(stderr, "1- Inviare il testo con la relativa lunghezza (es.: \"ciao come stai\")\n");
+    fprintf(stderr, "1- Inviare il testo (es.: \"ciao come stai\")\n");
     fprintf(stderr, "2- Visualizzare la frequenza dei caratteri contenuti nella stringa\n");
     fprintf(stderr, "3- Chiudere la connessione ricevendo risposta\n");
     fprintf(stderr, "4- Chiudere la connessione\n");
@@ -34,12 +36,9 @@ void print_menu()
     fflush(stderr);
 }
 
+//elaborazione della stringa ricevuta
 void elapse_string(char *str)
 {
-    /*
-        
-     */
-    //-----------------------------------------
     char delim[] = "|";
     int length = strlen(str);
     char response[length];
@@ -61,9 +60,8 @@ void elapse_string(char *str)
         }
         i++;
     }
-    //------------------------------------------------------
 
-
+    //splitta la stringa in modo da verificarne il contenuto
     char *ptr = strtok(response, delim);
 
     while(ptr != NULL)
@@ -71,12 +69,14 @@ void elapse_string(char *str)
         if(strcmp(ptr, "OK") == 0)
         {
             ptr = strtok(NULL, delim); 
+            //comando START
             if(strcmp(ptr, COMMANDS[1]) == 0)
             {
                 ptr = strtok(NULL, delim); 
                 fprintf(stderr, ANSI_COLOR_GREEN "Contatore (server): %s\n" ANSI_COLOR_RESET, ptr);
                 break;
             }
+            //comandi HIST ed EXIT
             else if(strcmp(ptr, COMMANDS[2]) == 0 || strcmp(ptr, COMMANDS[3]) == 0)
             {
                 char string[1024];
@@ -113,6 +113,7 @@ void elapse_string(char *str)
                 fprintf(stderr, ANSI_COLOR_YELLOW "%s" ANSI_COLOR_RESET, string);
                 fflush(stderr);
             }
+            //comando QUIT
             else 
             {
                 char string[512];
@@ -129,6 +130,7 @@ void elapse_string(char *str)
             fprintf(stderr, "\n");
             break;
         }
+        //gestione degli errori
         else if(strcmp(ptr, "ERR") == 0)
         {
             char string[1024];
@@ -145,12 +147,15 @@ void elapse_string(char *str)
                 ptr = strtok(NULL, delim);
             }
             fprintf(stderr, ANSI_COLOR_RED "%s\n" ANSI_COLOR_RESET, string);
+            fprintf(stderr, ANSI_COLOR_RED "Server disconnesso\n" ANSI_COLOR_RESET);
+            exit(0);
         }
     }
-    bzero(str, sizeof(&str));
+    bzero(str, sizeof(str));
     bzero(response, sizeof(response));
 }
 
+//string counter function
 int count_string(char str[])
 {
     int counter = 0;
@@ -209,6 +214,7 @@ int main(int argc, char *argv[])
     if (returnStatus == 0) 
     {
 	    fprintf(stderr, ANSI_COLOR_GREEN "Connect successful! Server at %s:%d\n" ANSI_COLOR_RESET, inet_ntoa(simpleServer.sin_addr), simplePort);
+        bzero(buffer, sizeof(buffer));
         returnStatus = read(simpleSocket, buffer, sizeof(buffer));
     	elapse_string(buffer);
         print_menu();        
@@ -224,6 +230,8 @@ int main(int argc, char *argv[])
     }
 
     int flag = 1;	
+
+    //client cycle
 	do
     {
 		char text[4096] = "";
@@ -231,10 +239,12 @@ int main(int argc, char *argv[])
         int choice = 0;
         do
         {
+            //traduzione comando
             char choice_s[] = "";            
             fprintf(stderr, "Inserisci un comando: ");
             fscanf(stdin, "  %s", choice_s);
             choice = atoi(choice_s);
+            //richiesta inserimento del testo
             if(choice == 1)
             {
                 fprintf(stderr, "Inserire il testo da inviare: ");
@@ -247,7 +257,7 @@ int main(int argc, char *argv[])
                 strcat(text, length_s);
                 break;
             }
-            if(choice > 1 && choice < 6)
+            if(choice > 1 && choice < 6) //contollo di correttezza sulla scelta
                 break;
             fprintf(stderr, ANSI_COLOR_RED "Scelta %d non corretta, reinserimento necessario.\n" ANSI_COLOR_RESET, choice);
         }
@@ -302,7 +312,7 @@ int main(int argc, char *argv[])
         //Socket reading if choice is not "cls" 
         if(choice > 0 && choice < 5)
         {
-            usleep(150);
+            usleep(300);
             returnStatus = read(simpleSocket, buffer, 512);
             elapse_string(buffer); 
             fflush(stderr);                           

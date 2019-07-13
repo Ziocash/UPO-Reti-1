@@ -1,0 +1,34 @@
+//-----------------------------------------
+    char delim[] = "|";
+    int length = strlen(str);
+    char response[length];
+    int flag = 0; 
+
+    bzero(response, sizeof(response));
+    int i = 0, j = 0;
+    while(i < length)
+    {
+        if(isalnum(str[i]))
+        {
+            response[j] = str[i];
+            j++;
+        }
+        else
+        {
+            response[j] = '|';
+            j++;
+        }
+        i++;
+    }
+    //------------------------------------------------------
+
+char len[4];
+                    count(len, buffer);
+                    printf(len);
+
+if (TEXT[i] >= 'a' && TEXT[i] <= 'z' || TEXT[i] >= 'A' && TEXT[i] <= 'Z') 
+            {
+                int x = TEXT[i] - 'a';
+                value[]
+            }
+            i++;

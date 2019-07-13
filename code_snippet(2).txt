@@ -1,0 +1,35 @@
+char *ptr = strtok(response, delim);
+    
+    while(ptr != NULL)
+    { 
+        if(strcmp(ptr, COMMANDS[1]) == 0)
+        {
+            ptr = strtok(NULL, delim); 
+            while(ptr != NULL)
+            {
+                
+                ptr = strtok(NULL, delim);
+            }
+        }
+        else if(strcmp(ptr, COMMANDS[2]) == 0 || strcmp(ptr, COMMANDS[3]) == 0)
+        {
+            
+        }
+        else 
+        {
+            char string[512];
+            memset(string, 0, sizeof(string));
+            ptr = strtok(NULL, delim);
+            while(ptr != NULL)
+            {
+                strcat(string, ptr);
+                strcat(string, " ");
+                ptr = strtok(NULL, delim);
+            }
+            fprintf(stderr, ANSI_COLOR_YELLOW "%s" ANSI_COLOR_RESET, string);
+        }
+        fprintf(stderr, "\n");
+        break;
+    }
+    bzero(str, sizeof(&str));
+    bzero(response, sizeof(response));
