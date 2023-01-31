@@ -10,4 +10,4 @@ This repo contains some code from previous exams and pratical exercises
 - [20024219](./20024219): Michele Tavarone
 - [20025225](./20025225): Antonio Scalogna
 - [20025432](./20025432): Simone Gattini
-- [20035170](./20035170): Simone Gattini
+- [20035170](./20035170): Anton Iliev
